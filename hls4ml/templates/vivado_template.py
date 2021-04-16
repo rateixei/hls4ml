@@ -71,23 +71,31 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
-conv_mult1_config_template = """struct config{index}_mult1 : nnet::dense_config {{
+rnn_mult1_config_template = """struct config{index}_mult1 : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 
-conv_mult2_config_template = """struct config{index}_mult2 : nnet::dense_config {{
+rnn_mult2_config_template = """struct config{index}_mult2 : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
@@ -444,8 +452,8 @@ class VivadoBackend(Backend):
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
         self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates('LSTM'                   , lstm_function_template,        [lstm_config_template, conv_mult1_config_template, activ_config_recr_template, activ_config_template, conv_mult2_config_template], lstm_include_list)
-        self.register_templates('GRU'                    , gru_function_template,         [gru_config_template, conv_mult1_config_template,activ_config_recr_template, activ_config_template, conv_mult2_config_template], lstm_include_list)
+        self.register_templates('LSTM'                   , lstm_function_template,        [lstm_config_template, rnn_mult1_config_template, activ_config_recr_template, activ_config_template, rnn_mult2_config_template], lstm_include_list)
+        self.register_templates('GRU'                    , gru_function_template,         [gru_config_template, rnn_mult1_config_template,activ_config_recr_template, activ_config_template, rnn_mult2_config_template], lstm_include_list)
         self.register_templates('Recurrent_Activation'   , activ_recr_function_template,   activ_config_recr_template, activ_include_list)
         self.register_templates('Conv2DBatchnorm'        , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
         self.register_templates('SeparableConv1D'        , sepconv1d_function_template,   [sepconv_config_template, conv1d_config_template, conv1d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv1d_include_list)
@@ -483,7 +491,7 @@ class VivadoBackend(Backend):
             n_out = layer.get_attr('n_filt')
         elif 'LSTM' in layer.__class__.__name__:
             n_in = layer.get_attr('n_in')
-            n_out = layer.get_attr('n_out')
+            n_out = layer.get_attr('n_out') * 4
 
         max_rf = n_in * n_out
         valid_reuse_factors = []

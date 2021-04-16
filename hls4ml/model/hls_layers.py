@@ -1126,6 +1126,14 @@ class LSTM(Layer):
     def initialize(self):
         shape = [self.attributes['n_sequence_out'],int(self.attributes['recurr_n_out']/4)]
         dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
+        compression = self.model.config.get_compression(self)
+        if self.model.config.is_resource_strategy(self):
+            if compression:
+                self.set_attr('strategy', 'compressed')
+            else:
+                self.set_attr('strategy', 'resource')
+        else:
+            self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
@@ -1158,6 +1166,8 @@ class LSTM(Layer):
         params['config_mult_t2'] = 'config{}_mult2'.format(self.index)
         params['lstm_act_t'] = '{}_config{}_recr'.format(self.get_attr('recurrent_activation'), self.index)
         params['act_t'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
+        params['strategy'] = self.get_attr('strategy')
+        
         lstm_config = self._config_template[0].format(**params)
 
 
@@ -1175,8 +1185,12 @@ class LSTM(Layer):
         mult_params2 = self._default_config_params()
         mult_params1['n_in'] = self.get_input_variable().dim_names[1]
         mult_params1['n_out'] = self.get_output_variable().dim_names[1] + ' * 4'
+        mult_params1['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        mult_params1['reuse'] = self.model.config.backend.set_closest_reuse_factor(self)
         mult_params2['n_in'] = self.get_output_variable().dim_names[1]
         mult_params2['n_out'] = self.get_output_variable().dim_names[1] + ' * 4'
+        mult_params2['product_type'] = self.model.config.backend.product_type(self.get_output_variable().type.precision, self.get_weights('recurrent_weight').type.precision)
+        mult_params2['reuse'] = self.model.config.backend.set_closest_reuse_factor(self)
 
         mult_config1 = self._config_template[1].format(**mult_params1)
         mult_config2 = self._config_template[4].format(**mult_params2)
