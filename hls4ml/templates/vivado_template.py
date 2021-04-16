@@ -144,8 +144,8 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     static const unsigned n_in  = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_state = {n_state};
-    static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 1;
+    static const unsigned io_type = nnet::{strategy};
+    static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
 }};\n"""
 
