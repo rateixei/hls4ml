@@ -6,6 +6,8 @@ from hls4ml.converters.keras_to_hls import keras_handler
 from hls4ml.model.hls_model import Quantizer
 from hls4ml.model.hls_model import IntegerPrecisionType
 
+MAXMULT =  4096
+
 @keras_handler('InputLayer')
 def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'InputLayer')

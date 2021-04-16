@@ -138,7 +138,7 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     static const unsigned n_state = {n_state};
     static const unsigned io_type = nnet::io_parallel;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;        
+    static const bool store_weights_in_bram = false;
 }};\n"""
 
 gru_config_template = """struct config{index} : nnet::gru_config {{
@@ -156,17 +156,17 @@ gru_config_template = """struct config{index} : nnet::gru_config {{
     static const unsigned n_sequence_out = {n_sequence_out};
     static const unsigned io_type = nnet::io_parallel;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;        
+    static const bool store_weights_in_bram = false;
 }};\n"""
 
-activ_config_recr_template = """struct {type}_config{index}_recr : nnet::activ_config {{
+activ_config_recr_template = """struct {recurrent_activation}_config{index}_recr : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = 1024;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned activation_type = nnet::activ_{recurrent_activation};
 }};\n"""
 
-activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+activ_config_template = """struct {activation}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
@@ -467,8 +467,8 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
-    
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0
@@ -481,6 +481,9 @@ class VivadoBackend(Backend):
         elif 'Conv2D' in layer.__class__.__name__:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
+        elif 'LSTM' in layer.__class__.__name__:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out')
 
         max_rf = n_in * n_out
         valid_reuse_factors = []
@@ -510,7 +513,7 @@ class VivadoBackend(Backend):
 
     def get_closest_reuse_factor(self, valid_rf, chosen_rf):
         """
-        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors()) 
+        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
         If two numbers are equally close, return the smallest number.
         """
         pos = bisect_left(valid_rf, chosen_rf)
@@ -613,7 +616,7 @@ class VivadoBackend(Backend):
 
         for i in range(min_W):
             windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i])), 2)))
-        
+
         return (min_W, windows_int)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
@@ -680,5 +683,5 @@ class VivadoBackend(Backend):
         for i in range(min_H):
             for j in range(min_W):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
-        
+
         return (min_H, min_W, windows_int)

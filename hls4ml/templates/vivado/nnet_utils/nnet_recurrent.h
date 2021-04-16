@@ -49,7 +49,7 @@ struct rnn_config
 };
 
 // Recusive Neural Network (RNN)
-// Resources: 
+// Resources:
 //  - http://www.wildml.com/2015/09/recurrent-neural-networks-tutorial-part-1-introduction-to-rnns/
 //  - https://github.com/pangolulu/rnn-from-scratch
 // Notes:
@@ -263,7 +263,7 @@ struct lstm_config
     static const bool store_weights_in_bram = false;
 };
 // Long Short term Memory NN (LSTM)
-// Resources: 
+// Resources:
 // https://github.com/nicodjimenez/lstm/blob/master/lstm.py
 // https://github.com/llSourcell/LSTM_Networks/blob/master/LSTM%20Demo.ipynb
 // https://en.wikipedia.org/wiki/Long_short-term_memory
@@ -284,15 +284,18 @@ template<class data_T, class res_T, typename CONFIG_T>
             typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
 	    ) {
   // Initialize the state variable -- will maintain state between function calls
+  # ifndef __SYNTHESIS__
   std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
   std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+  # endif
+
   res_T tmpres      [CONFIG_T::n_state*4];
   res_T tmpres_state[CONFIG_T::n_state*4];
   res_T tmpres_ifo  [CONFIG_T::n_state*3]; //activated i,f,o matrices (keras notation)
   res_T tmpres_c    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
   res_T inputacc_ifo[CONFIG_T::n_state*3]; //i,f,o matrices (keras notation)
   res_T inputacc_c  [CONFIG_T::n_state]; //c-matrix (keras notation)
-  res_T s_actstate[CONFIG_T::n_state]; 
+  res_T s_actstate[CONFIG_T::n_state];
   #pragma HLS ARRAY_PARTITION variable=h_newstate   complete
   #pragma HLS ARRAY_PARTITION variable=s_newstate   complete
   #pragma HLS ARRAY_PARTITION variable=tmpres       complete
@@ -301,20 +304,20 @@ template<class data_T, class res_T, typename CONFIG_T>
   #pragma HLS ARRAY_PARTITION variable=tmpres_c     complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_ifo complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_c   complete
-  #pragma HLS ARRAY_PARTITION variable=s_actstate   complete  
+  #pragma HLS ARRAY_PARTITION variable=s_actstate   complete
 
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_newstate,tmpres_state, param_r, param_br);
 
   for(int iacc = 0; iacc < (3*CONFIG_T::n_state); iacc++) {
-    int index = iacc; 
+    int index = iacc;
     if(iacc > 2*CONFIG_T::n_state-1) index = iacc + CONFIG_T::n_state;
     inputacc_ifo[iacc] = tmpres[index] + tmpres_state[index];
-  } 
+  }
   for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
     int index = iacc + CONFIG_T::n_state*2;
     inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
-  } 
+  }
   if(CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_relu){
     nnet::relu<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
   }
@@ -353,9 +356,10 @@ template<class data_T, class res_T, typename CONFIG_T>
     h_newstate[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
   }
 
+  # ifndef __SYNTHESIS__
   std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-
+  # endif
 }
 template<class data_T, class res_T, typename CONFIG_T>
 
@@ -375,7 +379,7 @@ template<class data_T, class res_T, typename CONFIG_T>
   res_T tmpres_c    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
   res_T inputacc_ifo[CONFIG_T::n_state*3]; //i,f,o matrices (keras notation)
   res_T inputacc_c  [CONFIG_T::n_state]; //c-matrix (keras notation)
-  res_T s_actstate[CONFIG_T::n_state]; 
+  res_T s_actstate[CONFIG_T::n_state];
   #pragma HLS ARRAY_PARTITION variable=h_newstate   complete
   #pragma HLS ARRAY_PARTITION variable=s_newstate   complete
   #pragma HLS ARRAY_PARTITION variable=tmpres       complete
@@ -384,7 +388,7 @@ template<class data_T, class res_T, typename CONFIG_T>
   #pragma HLS ARRAY_PARTITION variable=tmpres_c     complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_ifo complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_c   complete
-  #pragma HLS ARRAY_PARTITION variable=s_actstate   complete  
+  #pragma HLS ARRAY_PARTITION variable=s_actstate   complete
 
 
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
@@ -392,15 +396,15 @@ template<class data_T, class res_T, typename CONFIG_T>
 
   for(int iacc = 0; iacc < (3*CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
-    int index = iacc; 
+    int index = iacc;
     if(iacc > 2*CONFIG_T::n_state-1) index = iacc + CONFIG_T::n_state;
     inputacc_ifo[iacc] = tmpres[index] + tmpres_state[index];
-  } 
+  }
   for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
     int index = iacc + CONFIG_T::n_state*2;
     inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
-  } 
+  }
 
 
   if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_relu){
@@ -442,8 +446,10 @@ template<class data_T, class res_T, typename CONFIG_T>
     h_newstate[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
     //h_newstate[iacc] = inputacc_ifo[iacc+2*(CONFIG_T::n_state)]*s_newstate[iacc];
   }
+  # ifndef __SYNTHESIS__
   std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+  # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -462,7 +468,7 @@ template<class data_T, class res_T, typename CONFIG_T>
 
     for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_newstate[ii] = 0;
     for(int iloop = 0; iloop < CONFIG_T::n_parts; iloop++) {
-    nnet::lstm_static<data_T, res_T, typename CONFIG_T::config2>(1,data_lstm,h_newstate,param,param_r,param_b, param_br);
+    nnet::lstm_static<data_T, res_T, CONFIG_T>(1,data_lstm,h_newstate,param,param_r,param_b, param_br);
     for(int j = 0; j < CONFIG_T::n_in; j++){data_lstm++;}
     for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
       layer2_out_addup[i] = h_newstate[j];
@@ -505,9 +511,11 @@ template<class data_T, class res_T, typename CONFIG_T>
       typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
+    # ifndef __SYNTHESIS__
     std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
     std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-    
+    # endif
+
     typename CONFIG_T::accum_t h_state_hin [CONFIG_T::n_state];
     typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*3];
     typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state*3];
@@ -532,7 +540,7 @@ template<class data_T, class res_T, typename CONFIG_T>
 
     // Adding the individual vectors from the multiplication of tmpres = Wx*x(t); tmpres_state_zr = Wh*h(t-1); tmpres initialized with biases -- DONE
     for(int iacc = 0; iacc < (2*CONFIG_T::n_state); iacc++) {
-      int index = iacc; 
+      int index = iacc;
       inputacc_zr[iacc] = tmpres[index] + tmpres_state_zr[index];
     }
 
@@ -571,13 +579,15 @@ template<class data_T, class res_T, typename CONFIG_T>
     else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
       tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
     }
-    
+
     //Mix the stat with the previous state
     for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
     #pragma HLS UNROLL
       h_newstate[iacc] =  (res_T)(tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_newstate[iacc]*tmpres_zr[iacc]);
     }
-    std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;  
+    # ifndef __SYNTHESIS__
+    std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+    # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -590,7 +600,7 @@ template<class data_T, class res_T, typename CONFIG_T>
       typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
-    
+
     static res_T h_state[CONFIG_T::n_state];
     typename CONFIG_T::accum_t h_state_hin [CONFIG_T::n_state];
     typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*3];
@@ -612,15 +622,17 @@ template<class data_T, class res_T, typename CONFIG_T>
     #pragma HLS ARRAY_PARTITION variable=inputacc_zr     complete
     #pragma HLS ARRAY_PARTITION variable=inputacc_h      complete
 
+    # ifndef __SYNTHESIS__
     std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
     std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
+    # endif
 
     nnet::dense<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config1>(data, tmpres, param, param_b);
     nnet::dense<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_state, tmpres_state_zr, param_zr, param_br);
 
     // Adding the individual vectors from the multiplication of tmpres = Wx*x(t); tmpres_state_zr = Wh*h(t-1); tmpres initialized with biases -- DONE
     for(int iacc = 0; iacc < (2*CONFIG_T::n_state); iacc++) {
-      int index = iacc; 
+      int index = iacc;
       inputacc_zr[iacc] = tmpres[index] + tmpres_state_zr[index];
     }
 
@@ -659,14 +671,16 @@ template<class data_T, class res_T, typename CONFIG_T>
     else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
       tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
     }
-    
+
     //Mix the stat with the previous state
     for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
     #pragma HLS UNROLL
       h_state[iacc] =  (res_T)(tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_state[iacc]*tmpres_zr[iacc]);
       h_newstate[iacc] = h_state[iacc];
     }
+    # ifndef __SYNTHESIS__
     std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+    # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>

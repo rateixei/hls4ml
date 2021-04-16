@@ -128,13 +128,13 @@ def parse_default_keras_layer(keras_layer, input_names):
 def parse_data_format(input_shape, data_format='channels_last'):
     # Ignore batch size
     input_shape = input_shape[1:]
-    
+
     if data_format.lower() == 'channels_last':
         if len(input_shape) == 2: # 1D, (n_in, n_filt)
             return (input_shape[0], input_shape[1])
         elif len(input_shape) == 3: # 2D, (in_height, in_width, n_filt)
             return (input_shape[0], input_shape[1], input_shape[2])
-        
+
     elif data_format.lower() == 'channels_first':
         if len(input_shape) == 2: # 1D, (n_filt, n_in)
             return (input_shape[1], input_shape[0])
@@ -182,7 +182,7 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
     elif pad_type.lower() == 'valid':
         out_height = int(math.ceil(float(in_height - filt_height + 1) / float(stride_height)))
         out_width = int(math.ceil(float(in_width - filt_width + 1) / float(stride_width)))
-        
+
         pad_top = 0
         pad_bottom = 0
         pad_left = 0
@@ -227,7 +227,7 @@ def keras_to_hls(config):
     else:
         raise ValueError('No model found in config file.')
 
-    #print(model_arch)
+    # print(model_arch)
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
@@ -282,7 +282,7 @@ def keras_to_hls(config):
             if 'inbound_nodes' in keras_layer:
                 input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
             else:
-                # Sequential model, so output_shape from the previous layer is still valid 
+                # Sequential model, so output_shape from the previous layer is still valid
                 input_shapes = [output_shape]
 
         keras_class = keras_layer['class_name']
@@ -332,7 +332,7 @@ def keras_to_hls(config):
             layer_list.append(act_layer)
 
         assert(output_shape is not None)
-        
+
         output_shapes[layer['name']] = output_shape
 
     #################
