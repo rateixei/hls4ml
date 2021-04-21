@@ -1159,8 +1159,9 @@ class LSTM(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().dim_names[1]
+        params['n_sequence'] = self.get_input_variable().dim_names[0]
+        params['n_sequence_out'] = self.attributes['n_sequence_out']
         params['n_state'] = self.get_output_variable().dim_names[1]
-        params['n_layer'] = self.get_output_variable().dim_names[1]
         params['n_out'] = self.get_output_variable().dim_names[1]
         params['nzeros'] = self.get_weights('weight').nzeros
 
