@@ -410,9 +410,6 @@ template<class data_T, class res_T, typename CONFIG_T>
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_state,tmpres_state, param_r, param_br);
 
-  std::cout << "tmpres : [ "; for (int ii = 0; ii < CONFIG_T::n_state*4; ii++) std::cout << tmpres[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "tmpres_state : [ "; for (int ii = 0; ii < CONFIG_T::n_state*4; ii++) std::cout << tmpres_state[ii] << " "; std::cout << "]" << std::endl;
-
   for(int iacc = 0; iacc < (3*CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
     int index = iacc;
