@@ -6,8 +6,6 @@ from hls4ml.converters.keras_to_hls import keras_handler
 from hls4ml.model.hls_model import Quantizer
 from hls4ml.model.hls_model import IntegerPrecisionType
 
-MAXMULT =  4096
-
 @keras_handler('InputLayer')
 def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'InputLayer')
@@ -19,7 +17,7 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer['type_name'] = 'integer_input_t'
         layer['precision'] = IntegerPrecisionType(width=32)
     output_shape = keras_layer['config']['batch_input_shape']
-    
+
     return layer, output_shape
 
 
@@ -32,7 +30,7 @@ class BinaryQuantizer(Quantizer):
         else:
             raise Exception('BinaryQuantizer suppots 1 or 2 bits, but called with bits={}'.format(bits))
         super(BinaryQuantizer, self).__init__(bits, hls_type)
-    
+
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -46,7 +44,7 @@ class BinaryQuantizer(Quantizer):
 class TernaryQuantizer(Quantizer):
     def __init__(self):
         super(TernaryQuantizer, self).__init__(2, IntegerPrecisionType(width=2))
-    
+
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -59,7 +57,7 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, confi
     assert('Dense' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
-    
+
     weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
     layer['n_in'] = weights_shape[0]
     layer['n_out'] = weights_shape[1]
@@ -99,7 +97,7 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
         layer['class_name'] = 'Softmax'
     if layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
-    
+
     return layer, [shape for shape in input_shapes[0]]
 
 
@@ -122,53 +120,3 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
         layer['n_filt']=input_shapes[0][3]
 
     return layer, [shape for shape in input_shapes[0]]
-
-rnn_layers = ['LSTM', 'GRU']
-@keras_handler(*rnn_layers)
-def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] in rnn_layers)
-
-    layer = parse_default_keras_layer(keras_layer, input_names)
-    
-    weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
-    recurrent_weights_shape = data_reader.get_weights_shape(layer['name'], 'recurrent_kernel')
-    return_sequences_config = keras_layer['config']['return_sequences']
-    layer['n_sequence'] = input_shapes[0][1]
-    layer['n_sequence_out'] = layer['n_sequence'] if return_sequences_config else 1
-    layer['n_in'] = weights_shape[0]
-    layer['n_out'] = weights_shape[1]
-    layer['n_subout']=[weights_shape[1]]
-    if layer['n_in']*layer['n_out']>MAXMULT:
-        n_subout = int(MAXMULT/layer['n_in'])
-        n_totout = 0
-        layer['n_subout'] = []
-        layer['n_part'] = 0
-        while n_totout < layer['n_out']:
-            if n_totout + n_subout <= layer['n_out']:
-                layer['n_subout'].append(n_subout)
-                n_totout += n_subout
-            else:
-                layer['n_subout'].append(layer['n_out']-n_totout)
-                n_totout += layer['n_out']-n_totout
-            layer['n_part'] += 1
-    layer['recurr_n_in']=recurrent_weights_shape[0]
-    layer['recurr_n_out']=recurrent_weights_shape[1]
-    layer['recurr_n_subout']=[recurrent_weights_shape[1]]
-    layer['recurr_n_part'] = 1
-    if layer['recurr_n_in']*layer['recurr_n_out']>MAXMULT:
-        n_subout = int(MAXMULT/layer['recurr_n_in'])
-        n_totout = 0
-        layer['recurr_n_subout'] = []
-        layer['recurr_n_part'] = 0
-        while n_totout < layer['recurr_n_out']:
-            if n_totout + n_subout <= layer['recurr_n_out']:
-                layer['recurr_n_subout'].append(n_subout)
-                n_totout += n_subout
-            else:
-                layer['recurr_n_subout'].append(layer['recurr_n_out']-n_totout)
-                n_totout += layer['recurr_n_out']-n_totout
-            layer['recurr_n_part'] += 1
-    
-    output_shape = [input_shapes[0][0], layer['n_out']]
-
-    return layer, output_shape

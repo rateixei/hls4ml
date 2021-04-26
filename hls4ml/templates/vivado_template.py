@@ -169,19 +169,21 @@ gru_config_template = """struct config{index} : nnet::gru_config {{
     static const bool store_weights_in_bram = false;
 }};\n"""
 
-activ_config_recr_template = """struct {recurrent_activation}_config{index}_recr : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = 1024;
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned activation_type = nnet::activ_{recurrent_activation};
-}};\n"""
-
-activ_config_template = """struct {activation}_config{index} : nnet::activ_config {{
+activ_config_recr_template = """struct {type}_config{index}_recr : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    static const unsigned activation_type = nnet::activ_{activation};
+    static const unsigned activation_type = nnet::activ_{type};
+    typedef {table_t} table_t;
+}};\n"""
+
+activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned activation_type = nnet::activ_{type};
     typedef {table_t} table_t;
 }};\n"""
 
@@ -479,7 +481,7 @@ class VivadoBackend(Backend):
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
 
-    def get_valid_reuse_factors(self, layer):
+    def get_valid_reuse_factors(self, layer, recr = False):
         n_in = 0
         n_out = 0
         if 'Dense' in layer.__class__.__name__:
@@ -491,8 +493,11 @@ class VivadoBackend(Backend):
         elif 'Conv2D' in layer.__class__.__name__:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
-        elif 'LSTM' in layer.__class__.__name__:
+        elif 'LSTM' in layer.__class__.__name__ and not recr:
             n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') * 4
+        elif 'LSTM' in layer.__class__.__name__ and recr:
+            n_in = layer.get_attr('n_out')
             n_out = layer.get_attr('n_out') * 4
 
         max_rf = n_in * n_out
@@ -546,6 +551,15 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+
+    def set_closest_reuse_factor_recr(self, layer):
+        valid_rf = self.get_valid_reuse_factors(layer, recr = True)
+        chosen_rf = layer.reuse_factor_recr
+        if chosen_rf not in valid_rf:
+            closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
+            print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
+                .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
+            layer.reuse_factor_recr = closest_rf
 
     def convert_precision_string(self, precision):
         '''

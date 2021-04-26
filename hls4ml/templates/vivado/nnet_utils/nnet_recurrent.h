@@ -403,12 +403,15 @@ template<class data_T, class res_T, typename CONFIG_T>
   }
   # ifndef __SYNTHESIS__
   std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
+  // std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
+  // std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
   # endif
 
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_state,tmpres_state, param_r, param_br);
+
+  std::cout << "tmpres : [ "; for (int ii = 0; ii < CONFIG_T::n_state*4; ii++) std::cout << tmpres[ii] << " "; std::cout << "]" << std::endl;
+  std::cout << "tmpres_state : [ "; for (int ii = 0; ii < CONFIG_T::n_state*4; ii++) std::cout << tmpres_state[ii] << " "; std::cout << "]" << std::endl;
 
   for(int iacc = 0; iacc < (3*CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
@@ -478,7 +481,7 @@ template<class data_T, class res_T, typename CONFIG_T>
       typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
       ) {
 
-    res_T     h_newstate[CONFIG_T::n_state];
+    res_T  h_newstate[CONFIG_T::n_state];
     data_T data_in[CONFIG_T::n_in];
     bool reset_state = true;
 

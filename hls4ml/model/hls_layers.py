@@ -1127,9 +1127,12 @@ class LSTM(Layer):
         shape = [self.attributes['n_sequence_out'],int(self.attributes['recurr_n_out']/4)]
         dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
         compression = self.model.config.get_compression(self)
+        reuse_factor = self.model.config.get_reuse_factor(self)
+        self.reuse_factor_recr = reuse_factor
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
+                self.model.config.backend.set_closest_reuse_factor_recr(self)
             if compression:
                 self.set_attr('strategy', 'compressed')
             else:
@@ -1176,11 +1179,15 @@ class LSTM(Layer):
 
         lstm_params = self._default_config_params()
         lstm_params['n_in'] = self.get_output_variable().dim_names[1] + ' * 3'
+        lstm_params['table_size'] = 1024
+        lstm_params['type'] = self.get_attr('recurrent_activation')
+        lstm_params['table_t'] = 'ap_fixed<18,8>'
         lstm_act_config = self._config_template[2].format(**lstm_params)
 
         act_params = self._default_config_params()
         act_params['n_in'] = self.get_output_variable().dim_names[1]
         act_params['table_size'] = 1024
+        act_params['type'] = self.get_attr('activation')
         act_params['table_t'] = 'ap_fixed<18,8>'
         act_config = self._config_template[3].format(**act_params)
 
@@ -1193,7 +1200,7 @@ class LSTM(Layer):
         mult_params2['n_in'] = self.get_output_variable().dim_names[1]
         mult_params2['n_out'] = self.get_output_variable().dim_names[1] + ' * 4'
         mult_params2['product_type'] = self.model.config.backend.product_type(self.get_output_variable().type.precision, self.get_weights('recurrent_weight').type.precision)
-        mult_params2['reuse'] = params['reuse']
+        mult_params2['reuse'] = self.reuse_factor_recr
 
         mult_config1 = self._config_template[1].format(**mult_params1)
         mult_config2 = self._config_template[4].format(**mult_params2)
