@@ -71,7 +71,7 @@ void simple_rnn(
 
     // Initialize the state variable -- will maintain state between function calls
     //static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
-    std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: U*input
     data_T inputcache;
@@ -117,7 +117,7 @@ void simple_rnn(
         rawstate[iacc] = inputacc[iacc] + stateacc[iacc];
     }
 
-    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Run activation function
     if (CONFIG_T::activation_type == activ_relu){
@@ -130,7 +130,7 @@ void simple_rnn(
         tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
     }
 
-    std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: output = V*state
     data_T outputcache;
@@ -163,7 +163,7 @@ void simple_rnn_static(
 
     // Initialize the state variable -- will maintain state between function calls
     static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
-    std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: U*input
     data_T inputcache;
@@ -209,7 +209,7 @@ void simple_rnn_static(
         rawstate[iacc] = inputacc[iacc] + stateacc[iacc];
     }
 
-    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Run activation function
     if (CONFIG_T::activation_type == activ_relu){
@@ -222,7 +222,7 @@ void simple_rnn_static(
         tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
     }
 
-    std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: output = V*state
     data_T outputcache;
@@ -286,10 +286,10 @@ template<class data_T, class res_T, typename CONFIG_T>
             typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
 	    ) {
   // Initialize the state variable -- will maintain state between function calls
-  # ifndef __SYNTHESIS__
-  std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
+//   # ifndef __SYNTHESIS__
+//   std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   # endif
 
   res_T tmpres      [CONFIG_T::n_state*4];
   res_T tmpres_state[CONFIG_T::n_state*4];
@@ -358,10 +358,10 @@ template<class data_T, class res_T, typename CONFIG_T>
   for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
     h_newstate[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
+//   # ifndef __SYNTHESIS__
+//   std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -401,11 +401,11 @@ template<class data_T, class res_T, typename CONFIG_T>
       h_state[i_s_newstate] = 0;
     }
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
+//   # ifndef __SYNTHESIS__
+//   std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
   // std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
   // std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
-  # endif
+//   # endif
 
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_state,tmpres_state, param_r, param_br);
@@ -462,10 +462,10 @@ template<class data_T, class res_T, typename CONFIG_T>
     h_state[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
     h_newstate[iacc] = h_state[iacc];
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
+//   # ifndef __SYNTHESIS__
+//   std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+//   # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -595,10 +595,10 @@ template<class data_T, class res_T, typename CONFIG_T>
       typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
-    # ifndef __SYNTHESIS__
-    std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
-    std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-    # endif
+//     # ifndef __SYNTHESIS__
+//     std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
+//     std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+//     # endif
 
     typename CONFIG_T::accum_t h_state_hin [CONFIG_T::n_state];
     typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*3];
@@ -669,9 +669,9 @@ template<class data_T, class res_T, typename CONFIG_T>
     #pragma HLS UNROLL
       h_newstate[iacc] =  (res_T)(tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_newstate[iacc]*tmpres_zr[iacc]);
     }
-    # ifndef __SYNTHESIS__
-    std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-    # endif
+//     # ifndef __SYNTHESIS__
+//     std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
+//     # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
